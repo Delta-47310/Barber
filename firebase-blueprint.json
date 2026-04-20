@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "Client": {
+      "title": "Cliente",
+      "description": "Información del cliente de la barbería",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID del documento" },
+        "name": { "type": "string", "description": "Nombre completo" },
+        "phone": { "type": "string", "description": "Teléfono de contacto" },
+        "frequentServices": { "type": "array", "items": { "type": "string" }, "description": "Servicios frecuentes" },
+        "registrationDate": { "type": "string", "format": "date-time", "description": "Fecha de registro" },
+        "uid": { "type": "string", "description": "UID de Firebase Auth" },
+        "photoURL": { "type": "string", "description": "URL de la foto de perfil" }
+      },
+      "required": ["name", "phone", "registrationDate"]
+    },
+    "Barber": {
+      "title": "Barbero",
+      "description": "Información del barbero (Admin, Barbero o Cliente)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "specialty": { "type": "string" },
+        "uid": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "barber", "client"] },
+        "active": { "type": "boolean", "description": "Indica si el barbero tiene acceso al sistema" },
+        "accessExpirationDate": { "type": "string", "format": "date", "description": "Fecha de vencimiento del acceso" },
+        "photoURL": { "type": "string", "description": "URL de la foto de perfil" }
+      },
+      "required": ["name", "uid", "role"]
+    },
+    "AllowedBarber": {
+      "title": "Barbero Autorizado",
+      "description": "Email de barbero autorizado por el administrador",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "addedAt"]
+    },
+    "Service": {
+      "title": "Servicio",
+      "description": "Servicios ofrecidos por la barbería",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "estimatedDuration": { "type": "number", "description": "Duración en minutos" },
+        "active": { "type": "boolean" },
+        "barberId": { "type": "string" },
+        "photoURL": { "type": "string", "description": "Foto de ejemplo del corte (Base64)" }
+      },
+      "required": ["name", "price", "estimatedDuration", "active"]
+    },
+    "Appointment": {
+      "title": "Turno",
+      "description": "Cita agendada",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "appointmentDate": { "type": "string", "format": "date" },
+        "startTime": { "type": "string", "description": "HH:mm" },
+        "endTime": { "type": "string", "description": "HH:mm" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "in-process", "completed", "cancelled"] },
+        "rating": { "type": "number", "description": "Calificación del cliente (1-5)" }
+      },
+      "required": ["clientId", "serviceId", "appointmentDate", "startTime", "status"]
+    },
+    "Schedule": {
+      "title": "Horario",
+      "description": "Horario laboral del barbero",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "barberId": { "type": "string" },
+        "day": { "type": "string", "description": "Día de la semana" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "active": { "type": "boolean", "description": "Indica si el día está habilitado" }
+      },
+      "required": ["barberId", "day", "startTime", "endTime", "active"]
+    }
+  },
+  "firestore": {
+    "/clients/{clientId}": { "schema": "Client", "description": "Colección de clientes" },
+    "/barbers/{barberId}": { "schema": "Barber", "description": "Colección de barberos (admins)" },
+    "/services/{serviceId}": { "schema": "Service", "description": "Catálogo de servicios" },
+    "/appointments/{appointmentId}": { "schema": "Appointment", "description": "Citas agendadas" },
+    "/schedules/{scheduleId}": { "schema": "Schedule", "description": "Horarios de atención" },
+    "/allowed_barbers/{id}": { "schema": "AllowedBarber", "description": "Lista de emails autorizados para ser barberos" }
+  }
+}

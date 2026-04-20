@@ -1,0 +1,23 @@
+{
+  "name": "Barber App - Gestión de Citas",
+  "short_name": "Barber App",
+  "description": "Reserva tu cita en la mejor barbería de la ciudad.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/barber-icon-192/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/barber-icon-512/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

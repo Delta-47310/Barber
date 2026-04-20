@@ -1,0 +1,165 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: clients
+    // Fields: name (string), phone (string), frequentServices (list), registrationDate (string), uid (string)
+    //
+    // Collection: barbers
+    // Fields: name (string), specialty (string), uid (string), role (string), active (bool), accessExpirationDate (string)
+    //
+    // Collection: services
+    // Fields: name (string), price (number), estimatedDuration (number), active (bool), barberId (string)
+    //
+    // Collection: appointments
+    // Fields: clientId (string), clientName (string), serviceId (string), serviceName (string), appointmentDate (string), startTime (string), endTime (string), status (string)
+    //
+    // Collection: schedules
+    // Fields: barberId (string), day (string), startTime (string), endTime (string)
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((exists(/databases/$(database)/documents/barbers/$(request.auth.uid)) && get(/databases/$(database)/documents/barbers/$(request.auth.uid)).data.role == 'admin') ||
+         (request.auth.token.email == "482400473@alumnos.utzac.edu.mx"));
+    }
+
+    function isBarber() {
+      return isAuthenticated() && 
+        (exists(/databases/$(database)/documents/barbers/$(request.auth.uid)) && get(/databases/$(database)/documents/barbers/$(request.auth.uid)).data.role == 'barber');
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidClient(data) {
+      return data.keys().hasAll(['name']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() >= 0 && data.phone.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1000000)) &&
+             (!('registrationDate' in data) || data.registrationDate is string);
+    }
+
+    function isEmailAuthorized() {
+      return exists(/databases/$(database)/documents/allowed_barbers/$(request.auth.token.email));
+    }
+
+    function isValidBarber(data, barberId) {
+      return data.keys().hasAll(['name', 'uid', 'role', 'specialty']) &&
+             data.name is string && data.uid == barberId &&
+             data.role in ['admin', 'barber', 'client'] &&
+             (data.role != 'admin' || isAdmin()) &&
+             (data.role != 'barber' || isEmailAuthorized() || isAdmin()) &&
+             (!('active' in data) || data.active is bool) &&
+             (!('accessExpirationDate' in data) || data.accessExpirationDate is string) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 1000000));
+    }
+
+    function isValidService(data) {
+      return data.keys().hasAll(['name', 'price', 'estimatedDuration', 'active', 'barberId', 'barberName']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.price is number && data.price >= 0 &&
+             data.estimatedDuration is number && data.estimatedDuration > 0 &&
+             data.barberId == request.auth.uid &&
+             (!('photoURL' in data) || data.photoURL is string) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 500));
+    }
+
+    function isValidAppointment(data) {
+      return data.keys().hasAll(['clientId', 'serviceId', 'appointmentDate', 'startTime', 'status']) &&
+             data.status in ['pending', 'accepted', 'in-process', 'completed', 'cancelled'] &&
+             (!('rating' in data) || (data.rating is number && data.rating >= 1 && data.rating <= 5));
+    }
+
+    function isValidAllowedBarber(data) {
+      return data.keys().hasAll(['email', 'addedAt']) &&
+             data.email is string && isValidEmail(data.email);
+    }
+
+    function isValidSchedule(data) {
+      return data.keys().hasAll(['barberId', 'day', 'startTime', 'endTime']) &&
+             data.barberId == request.auth.uid &&
+             data.day in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /clients/{clientId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isOwner(clientId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /barbers/{barberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isOwner(barberId) || isAdmin());
+      allow update: if isAuthenticated() && (
+        (isOwner(barberId) && (
+          // Protection against self-promotion or self-activation
+          request.resource.data.get('role', 'client') == resource.data.get('role', 'client') &&
+          request.resource.data.get('active', true) == resource.data.get('active', true)
+        )) || 
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && (isAdmin() || isBarber());
+      allow update: if isAuthenticated() && (isAdmin() || (isBarber() && resource.data.barberId == request.auth.uid));
+      allow delete: if isAuthenticated() && (isAdmin() || (isBarber() && resource.data.barberId == request.auth.uid));
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidAppointment(request.resource.data);
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.clientId || 
+        (isBarber() && request.auth.uid == resource.data.barberId) || 
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /schedules/{scheduleId} {
+      allow read: if true;
+      allow create: if isBarber() && isValidSchedule(request.resource.data);
+      allow update: if isBarber() && isValidSchedule(request.resource.data);
+      allow delete: if isBarber() && resource.data.barberId == request.auth.uid;
+    }
+
+    match /allowed_barbers/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidAllowedBarber(request.resource.data);
+    }
+
+    match /fcm_tokens/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid);
+    }
+
+    match /notifications/{id} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.uid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+  }
+}
