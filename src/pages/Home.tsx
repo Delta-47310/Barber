@@ -3,40 +3,16 @@ import { motion } from 'motion/react';
 import { Scissors, Calendar, Clock, Star, ShieldCheck, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Smartphone, Download } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { user, isAdmin, isBarber } = useAuth();
-  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-    }
-  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-16 pb-12"
+      className="space-y-16"
     >
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-3xl bg-neutral-900 px-8 py-20 text-white md:px-16">
@@ -81,32 +57,6 @@ const Home: React.FC = () => {
         <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-neutral-800/50 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 h-96 w-96 rounded-full bg-neutral-800/30 blur-3xl" />
       </section>
-
-      {/* PWA Install Promo */}
-      {deferredPrompt && (
-        <motion.section
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="rounded-3xl bg-indigo-600 p-8 text-white shadow-2xl shadow-indigo-200"
-        >
-          <div className="flex flex-col items-center gap-8 md:flex-row">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/10">
-              <Smartphone className="h-10 w-10" />
-            </div>
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="mb-2 text-2xl font-bold">Lleva tu Barbería en el Bolsillo</h2>
-              <p className="text-indigo-100">Instala la aplicación para recibir notificaciones de tus citas y reservar más rápido.</p>
-            </div>
-            <button
-              onClick={handleInstallClick}
-              className="flex items-center gap-2 rounded-full bg-white px-8 py-4 font-bold text-indigo-600 transition-transform hover:scale-105 active:scale-95"
-            >
-              <Download className="h-5 w-5" />
-              Descargar App
-            </button>
-          </div>
-        </motion.section>
-      )}
 
       {/* Features Grid */}
       <section className="grid gap-8 md:grid-cols-3">
