@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, getDocs, orderBy } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import { Appointment, Service, AppointmentStatus, Schedule, Barber } from '../types';
+import { Appointment, Service, AppointmentStatus, Schedule, Barber, Client } from '../types';
 import { format, addMinutes, startOfDay, endOfDay, isBefore, parseISO, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Calendar as CalendarIcon, Clock, User, Scissors, X, Check, AlertCircle, CheckCircle2, Star, StarHalf, ChevronLeft, ChevronRight, Loader2, ShieldCheck } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, User, Scissors, X, Check, AlertCircle, CheckCircle2, Star, StarHalf, ChevronLeft, ChevronRight, Loader2, ShieldCheck, Phone } from 'lucide-react';
 
 const RatingPicker: React.FC<{ 
   value: number; 
@@ -270,6 +270,8 @@ const ClientRatingSection: React.FC<{
 const Appointments: React.FC = () => {
   const { user, isAdmin, isBarber, profile } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [allClientRatings, setAllClientRatings] = useState<Appointment[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barberSchedules, setBarberSchedules] = useState<Schedule[]>([]);
@@ -399,11 +401,30 @@ const Appointments: React.FC = () => {
       setBarberSchedules(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Schedule)));
     });
 
+    // Load all clients for phone numbers and ratings
+    let unsubscribeClients = () => {};
+    let unsubscribeAllRatings = () => {};
+
+    if (isAdmin || isBarber) {
+      const clientsRef = collection(db, 'clients');
+      unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
+        setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
+      });
+
+      // Special query to get ALL client ratings for reputation, regardless of barber
+      const qRatings = query(collection(db, 'appointments'), where('clientRating', '>', 0));
+      unsubscribeAllRatings = onSnapshot(qRatings, (snapshot) => {
+        setAllClientRatings(snapshot.docs.map(doc => doc.data() as Appointment));
+      });
+    }
+
     return () => {
       unsubscribe();
       unsubscribeServices();
       unsubscribeBarbers();
       unsubscribeSchedules();
+      unsubscribeClients();
+      unsubscribeAllRatings();
     };
   }, [user, isAdmin, isBarber]);
 
@@ -672,14 +693,39 @@ const Appointments: React.FC = () => {
 
                 {/* Client Info - Shown for Admins and Barbers */}
                 {(isAdmin || isBarber) && (
-                  <div className="flex items-center gap-4 pt-4 border-t border-neutral-50">
-                    <div className="h-10 w-10 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-400">
-                      <User className="h-5 w-5" />
+                  <div className="flex flex-col gap-3 pt-4 border-t border-neutral-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-neutral-50 flex items-center justify-center text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white transition-colors duration-500">
+                          <User className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-0.5">Cliente</p>
+                          <p className="font-bold text-neutral-800">{app.clientName}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Reputation Rating */}
+                      {(() => {
+                        const clientRatings = allClientRatings.filter(r => r.clientId === app.clientId);
+                        if (clientRatings.length === 0) return null;
+                        const avg = clientRatings.reduce((acc, curr) => acc + (curr.clientRating || 0), 0) / clientRatings.length;
+                        return (
+                          <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">
+                            <Star className="h-3 w-3 fill-indigo-500 text-indigo-500" />
+                            <span className="text-[11px] font-black text-indigo-700">{avg.toFixed(1)}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 mb-0.5">Cliente</p>
-                      <p className="font-bold text-neutral-800">{app.clientName}</p>
-                    </div>
+
+                    {/* Client Phone */}
+                    {clients.find(c => c.uid === app.clientId)?.phone && (
+                      <div className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors">
+                        <Phone className="h-3.5 w-3.5" />
+                        <span className="text-xs font-bold">{clients.find(c => c.uid === app.clientId)?.phone}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
