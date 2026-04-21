@@ -214,11 +214,20 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
+    
+    // Explicitly handle refresh by redirecting any unhandled HTML request to home
+    app.use((req, res, next) => {
+      if (req.method === 'GET' && req.headers.accept?.includes('text/html') && !req.path.includes('.')) {
+        return res.redirect('/');
+      }
+      next();
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
+    // Ensure all unknown routes redirect to home in production as requested
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      res.redirect('/');
     });
   }
 
