@@ -38,7 +38,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/scissors-icon.png', // Assuming an icon exists or use a default
+    icon: '/icon.png', // Main app icon
     data: payload.data
   };
 
