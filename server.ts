@@ -207,6 +207,21 @@ async function startServer() {
     });
   }
 
+  // Pre-Vite Redirect: Handle refresh by redirecting any unhandled HTML request to home
+  // This must be BEFORE Vite middleware to catch reloads on subroutes
+  app.use((req, res, next) => {
+    // If it's a GET request for a page (HTML) and NOT the root, and NOT a static file (no dot), redirect to home
+    if (req.method === 'GET' && 
+        req.path !== '/' && 
+        !req.path.startsWith('/api') && 
+        !req.path.includes('.') &&
+        (req.headers.accept?.includes('text/html') || !req.headers.accept)) {
+      console.log(`[Redirect] Subroute refresh detected: ${req.path} -> Redirecting to /`);
+      return res.redirect('/');
+    }
+    next();
+  });
+
   // Vite middleware
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -214,18 +229,10 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
-    
-    // Explicitly handle refresh by redirecting any unhandled HTML request to home
-    app.use((req, res, next) => {
-      if (req.method === 'GET' && req.headers.accept?.includes('text/html') && !req.path.includes('.')) {
-        return res.redirect('/');
-      }
-      next();
-    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    // Ensure all unknown routes redirect to home in production as requested
+    // Ensure all unknown routes redirect to home in production
     app.get('*', (req, res) => {
       res.redirect('/');
     });
