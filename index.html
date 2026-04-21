@@ -19,7 +19,10 @@
           typeof msg === 'string' && (
             msg.includes('[vite] No se pudo conectar con el websocket') ||
             msg.includes('WebSocket cerrado sin haber abierto') ||
-            msg.includes('[vite] failed to connect to websocket')
+            msg.includes('WebSocket cerrado sin abrirse') ||
+            msg.includes('[vite] failed to connect to websocket') ||
+            msg.includes('failed to connect to websocket') ||
+            msg.includes('WebSocket connection to')
           );
 
         console.error = function(...args) {

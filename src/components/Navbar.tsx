@@ -9,6 +9,29 @@ const Navbar: React.FC = () => {
   const { user, isAdmin, isBarber, profile } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(false);
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -66,6 +89,15 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex md:items-center md:gap-6">
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallClick}
+                className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-600 transition-all hover:bg-indigo-100 animate-pulse"
+              >
+                <LifeBuoy className="h-4 w-4" />
+                Instalar App
+              </button>
+            )}
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -110,6 +142,18 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="border-t border-neutral-100 bg-white md:hidden">
           <div className="flex flex-col gap-2 p-4">
+            {deferredPrompt && (
+              <button
+                onClick={() => {
+                  handleInstallClick();
+                  setIsOpen(false);
+                }}
+                className="flex items-center gap-3 rounded-lg bg-indigo-50 px-3 py-3 text-base font-bold text-indigo-600 transition-colors hover:bg-indigo-100 mb-2"
+              >
+                <LifeBuoy className="h-5 w-5" />
+                Instalar Aplicación
+              </button>
+            )}
             {navItems.map((item) => (
               <Link
                 key={item.path}
