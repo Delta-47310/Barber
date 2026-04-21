@@ -2,8 +2,7 @@
   "name": "Barber App - Gestión de Citas",
   "short_name": "Barber App",
   "description": "Reserva tu cita en la mejor barbería de la ciudad.",
-  "start_url": "/",
-  "id": "/",
+  "start_url": ".",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
@@ -11,14 +10,16 @@
   "categories": ["lifestyle", "business"],
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "https://picsum.photos/seed/barber-icon-192/192/192",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon.png",
+      "src": "https://picsum.photos/seed/barber-icon-512/512/512",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -27,14 +28,14 @@
       "short_name": "Reservar",
       "description": "Agenda una nueva cita",
       "url": "/appointments",
-      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "https://picsum.photos/seed/calendar-icon/192/192", "sizes": "192x192" }]
     },
     {
       "name": "Ver mis Citas",
       "short_name": "Mis Citas",
       "description": "Consulta tus citas pendientes",
       "url": "/appointments",
-      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "https://picsum.photos/seed/history-icon/192/192", "sizes": "192x192" }]
     }
   ]
 }

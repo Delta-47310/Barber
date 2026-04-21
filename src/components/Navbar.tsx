@@ -9,26 +9,18 @@ const Navbar: React.FC = () => {
   const { user, isAdmin, isBarber, profile } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(false);
-  const [deferredPrompt, setDeferredPrompt] = React.useState<any>((window as any).deferredPrompt || null);
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
-      (window as any).deferredPrompt = e;
       setDeferredPrompt(e);
     };
 
-    const handleAppInstalled = () => {
-      (window as any).deferredPrompt = null;
-      setDeferredPrompt(null);
-    };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 

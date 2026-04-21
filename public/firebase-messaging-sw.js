@@ -1,4 +1,3 @@
-// Service Worker Version: 1.1
 importScripts('https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.11.0/firebase-messaging-compat.js');
 
@@ -39,7 +38,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/icon.png', // Main app icon
+    icon: '/scissors-icon.png', // Assuming an icon exists or use a default
     data: payload.data
   };
 
