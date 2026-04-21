@@ -207,16 +207,16 @@ async function startServer() {
     });
   }
 
-  // Pre-Vite Redirect: Handle refresh by redirecting any unhandled HTML request to home
-  // This must be BEFORE Vite middleware to catch reloads on subroutes
+  // Redirección Agresiva: Evita "Cannot GET" al refrescar subrutas
+  // Redirige cualquier carga directa de página que no sea la raíz o API al inicio
   app.use((req, res, next) => {
-    // If it's a GET request for a page (HTML) and NOT the root, and NOT a static file (no dot), redirect to home
-    if (req.method === 'GET' && 
-        req.path !== '/' && 
-        !req.path.startsWith('/api') && 
-        !req.path.includes('.') &&
-        (req.headers.accept?.includes('text/html') || !req.headers.accept)) {
-      console.log(`[Redirect] Subroute refresh detected: ${req.path} -> Redirecting to /`);
+    const isGet = req.method === 'GET';
+    const isRoot = req.url === '/' || req.path === '/';
+    const isApi = req.path.startsWith('/api');
+    const isFile = req.path.includes('.'); // Evita redirigir assets como .js, .css, .png
+
+    if (isGet && !isRoot && !isApi && !isFile) {
+      console.log(`[Redirect] Bloqueando error de refresco en: ${req.path} -> Redirigiendo a /`);
       return res.redirect('/');
     }
     next();
