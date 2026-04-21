@@ -9,6 +9,37 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="https://picsum.photos/seed/barber-icon-192/192/192" />
     <title>Barber App - Gestión de Citas</title>
+    <script>
+      // Suppress benign Vite WebSocket connection errors in AI Studio environment
+      (function() {
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        const isBenignViteError = (msg) => 
+          typeof msg === 'string' && (
+            msg.includes('[vite] No se pudo conectar con el websocket') ||
+            msg.includes('WebSocket cerrado sin haber abierto') ||
+            msg.includes('[vite] failed to connect to websocket')
+          );
+
+        console.error = function(...args) {
+          if (args.some(isBenignViteError)) return;
+          originalError.apply(console, args);
+        };
+
+        console.warn = function(...args) {
+          if (args.some(isBenignViteError)) return;
+          originalWarn.apply(console, args);
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (isBenignViteError(event.reason) || (event.reason && isBenignViteError(event.reason.message))) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

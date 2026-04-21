@@ -189,12 +189,12 @@ const ClientRatingPicker: React.FC<{
           
           return (
             <div key={star} className="relative pointer-events-none transition-transform active:scale-110">
-              <Star className={`h-8 w-8 ${isActive ? 'fill-indigo-500 text-indigo-500' : 'text-neutral-200'}`} />
+              <Star className={`h-8 w-8 ${isActive ? 'fill-amber-400 text-amber-400' : 'text-neutral-200'}`} />
             </div>
           );
         })}
       </div>
-      <span className="text-sm font-black text-indigo-500 w-8">
+      <span className="text-sm font-black text-amber-500 w-8">
         {(hover ?? value) > 0 ? (hover ?? value) : '0'}
       </span>
     </div>
@@ -213,18 +213,18 @@ const ClientRatingSection: React.FC<{
 
   if (isConfirmed || initialRating) {
     return (
-      <div className="mt-6 space-y-3 rounded-2xl bg-indigo-50 p-5 border border-indigo-100">
-        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Tu retroalimentación sobre el cliente</p>
+      <div className="mt-6 space-y-3 rounded-2xl bg-amber-50 p-5 border border-amber-100">
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Tu retroalimentación sobre el cliente</p>
         <div className="flex items-center gap-2">
-          <Star className="h-4 w-4 fill-indigo-500 text-indigo-500" />
-          <span className="font-black text-indigo-900">{initialRating || localRating}</span>
+          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <span className="font-black text-amber-900">{initialRating || localRating}</span>
         </div>
         {(initialReview || review) && (
-          <p className="text-xs font-bold text-indigo-700 italic bg-white/50 p-3 rounded-xl border border-indigo-100/50">
+          <p className="text-xs font-bold text-amber-700 italic bg-white/50 p-3 rounded-xl border border-amber-100/50">
             "{initialReview || review}"
           </p>
         )}
-        <p className="text-[10px] font-black text-indigo-500 flex items-center gap-1">
+        <p className="text-[10px] font-black text-amber-500 flex items-center gap-1">
           <ShieldCheck className="h-3 w-3" /> Información guardada para otros barberos.
         </p>
       </div>
@@ -232,9 +232,9 @@ const ClientRatingSection: React.FC<{
   }
 
   return (
-    <div className="mt-8 space-y-5 rounded-[2rem] bg-indigo-50/50 p-6 border border-indigo-100 shadow-sm">
+    <div className="mt-8 space-y-5 rounded-[2rem] bg-amber-50/50 p-6 border border-amber-100 shadow-sm">
       <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-3">Califica al Cliente</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-3">Califica al Cliente</p>
         <ClientRatingPicker 
           value={localRating} 
           onChange={setLocalRating}
@@ -242,12 +242,12 @@ const ClientRatingSection: React.FC<{
       </div>
 
       <div className="space-y-2">
-        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Reseña opcional (pública para barberos)</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Reseña opcional (pública para barberos)</p>
         <textarea
           value={review}
           onChange={(e) => setReview(e.target.value)}
           placeholder="Ej: Cliente puntual, muy amable..."
-          className="w-full rounded-2xl border border-indigo-100 bg-white p-4 text-xs font-bold outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 min-h-[80px] resize-none"
+          className="w-full rounded-2xl border border-amber-100 bg-white p-4 text-xs font-bold outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 min-h-[80px] resize-none"
         />
       </div>
 
@@ -259,7 +259,7 @@ const ClientRatingSection: React.FC<{
           }
         }}
         disabled={localRating === 0}
-        className="w-full rounded-2xl bg-indigo-600 py-4 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-indigo-700 disabled:opacity-50 shadow-lg shadow-indigo-200"
+        className="w-full rounded-2xl bg-neutral-900 py-4 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-neutral-800 disabled:opacity-50 shadow-lg shadow-neutral-200"
       >
         Guardar Calificación del Cliente
       </button>
@@ -409,13 +409,13 @@ const Appointments: React.FC = () => {
       const clientsRef = collection(db, 'clients');
       unsubscribeClients = onSnapshot(clientsRef, (snapshot) => {
         setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
-      });
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'clients'));
 
       // Special query to get ALL client ratings for reputation, regardless of barber
       const qRatings = query(collection(db, 'appointments'), where('clientRating', '>', 0));
       unsubscribeAllRatings = onSnapshot(qRatings, (snapshot) => {
         setAllClientRatings(snapshot.docs.map(doc => doc.data() as Appointment));
-      });
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'appointments'));
     }
 
     return () => {
@@ -707,13 +707,13 @@ const Appointments: React.FC = () => {
                       
                       {/* Reputation Rating */}
                       {(() => {
-                        const clientRatings = allClientRatings.filter(r => r.clientId === app.clientId);
-                        if (clientRatings.length === 0) return null;
-                        const avg = clientRatings.reduce((acc, curr) => acc + (curr.clientRating || 0), 0) / clientRatings.length;
+                        const rated = allClientRatings.filter(r => r.clientId === app.clientId && (r.clientRating || 0) > 0);
+                        if (rated.length === 0) return null;
+                        const avg = rated.reduce((acc, curr) => acc + (curr.clientRating || 0), 0) / rated.length;
                         return (
-                          <div className="flex items-center gap-1.5 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">
-                            <Star className="h-3 w-3 fill-indigo-500 text-indigo-500" />
-                            <span className="text-[11px] font-black text-indigo-700">{avg.toFixed(1)}</span>
+                          <div className="flex items-center gap-1.5 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                            <span className="text-[11px] font-black text-amber-700">{avg.toFixed(1)}</span>
                           </div>
                         );
                       })()}

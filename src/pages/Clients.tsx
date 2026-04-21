@@ -202,13 +202,17 @@ const Clients: React.FC = () => {
                     <h2 className="text-xl font-bold text-neutral-900">Historial de Citas</h2>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-neutral-500">{selectedClient.name}</p>
-                      {clientAppointments.some(a => a.clientRating) && (
+                      {clientAppointments.some(a => (a.clientRating || 0) > 0) && (
                         <>
                           <span className="text-neutral-300">•</span>
                           <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-indigo-500 text-indigo-500" />
-                            <span className="text-xs font-black text-indigo-600">
-                              {(clientAppointments.reduce((acc, curr) => acc + (curr.clientRating || 0), 0) / clientAppointments.filter(a => a.clientRating).length).toFixed(1)}
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-black text-amber-600">
+                              {(() => {
+                                const rated = clientAppointments.filter(a => (a.clientRating || 0) > 0);
+                                if (rated.length === 0) return '0.0';
+                                return (rated.reduce((acc, curr) => acc + (curr.clientRating || 0), 0) / rated.length).toFixed(1);
+                              })()}
                             </span>
                           </div>
                         </>

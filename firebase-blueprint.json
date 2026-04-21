@@ -71,7 +71,9 @@
         "startTime": { "type": "string", "description": "HH:mm" },
         "endTime": { "type": "string", "description": "HH:mm" },
         "status": { "type": "string", "enum": ["pending", "accepted", "in-process", "completed", "cancelled"] },
-        "rating": { "type": "number", "description": "Calificación del cliente (1-5)" }
+        "rating": { "type": "number", "description": "Calificación del cliente al barbero (1-5)" },
+        "clientRating": { "type": "number", "description": "Calificación del barbero al cliente (1-5)" },
+        "clientReview": { "type": "string", "description": "Reseña del barbero sobre el cliente" }
       },
       "required": ["clientId", "serviceId", "appointmentDate", "startTime", "status"]
     },
