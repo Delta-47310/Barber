@@ -10,13 +10,13 @@
   "categories": ["lifestyle", "business"],
   "icons": [
     {
-      "src": "https://picsum.photos/seed/barber-icon-192/192/192",
+      "src": "/icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://picsum.photos/seed/barber-icon-512/512/512",
+      "src": "/icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -28,14 +28,14 @@
       "short_name": "Reservar",
       "description": "Agenda una nueva cita",
       "url": "/appointments",
-      "icons": [{ "src": "https://picsum.photos/seed/calendar-icon/192/192", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
     },
     {
       "name": "Ver mis Citas",
       "short_name": "Mis Citas",
       "description": "Consulta tus citas pendientes",
       "url": "/appointments",
-      "icons": [{ "src": "https://picsum.photos/seed/history-icon/192/192", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
     }
   ]
 }
