@@ -10,13 +10,13 @@
   "categories": ["lifestyle", "business"],
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "https://picsum.photos/seed/barber-icon-192/192/192",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon.png",
+      "src": "https://picsum.photos/seed/barber-icon-512/512/512",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
