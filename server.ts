@@ -207,21 +207,6 @@ async function startServer() {
     });
   }
 
-  // Redirección Agresiva: Evita "Cannot GET" al refrescar subrutas
-  // Redirige cualquier carga directa de página que no sea la raíz o API al inicio
-  app.use((req, res, next) => {
-    const isGet = req.method === 'GET';
-    const isRoot = req.url === '/' || req.path === '/';
-    const isApi = req.path.startsWith('/api');
-    const isFile = req.path.includes('.'); // Evita redirigir assets como .js, .css, .png
-
-    if (isGet && !isRoot && !isApi && !isFile) {
-      console.log(`[Redirect] Bloqueando error de refresco en: ${req.path} -> Redirigiendo a /`);
-      return res.redirect('/');
-    }
-    next();
-  });
-
   // Vite middleware
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -232,9 +217,8 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    // Ensure all unknown routes redirect to home in production
     app.get('*', (req, res) => {
-      res.redirect('/');
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
